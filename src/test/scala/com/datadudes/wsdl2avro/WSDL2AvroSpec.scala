@@ -51,9 +51,9 @@ class WSDL2AvroSpec extends SpecificationWithJUnit with AllExpectations {
       val element2 = <element name="element2" type="boolean"/>
       val element3 = <element name="element3" type="foobar:string"/>
 
-      node2field(element1).schema().getType must be equalTo Type.INT
-      node2field(element2).schema().getType must be equalTo Type.BOOLEAN
-      node2field(element3).schema().getType must be equalTo Type.STRING
+      element2field(element1).schema().getType must be equalTo Type.INT
+      element2field(element2).schema().getType must be equalTo Type.BOOLEAN
+      element2field(element3).schema().getType must be equalTo Type.STRING
     }
 
     "convert XML primitives to the right Avro primitives" in {
@@ -67,23 +67,23 @@ class WSDL2AvroSpec extends SpecificationWithJUnit with AllExpectations {
       val base64BinaryElement = <element name="base64BinaryElement" type="base64Binary"/>
       val anyTypeElement = <element name="anyTypeElement" type="anyType"/>
 
-      node2field(intElement).schema().getType must be equalTo Type.INT
-      node2field(doubleElement).schema().getType must be equalTo Type.DOUBLE
-      node2field(stringElement).schema().getType must be equalTo Type.STRING
-      node2field(booleanElement).schema().getType must be equalTo Type.BOOLEAN
-      node2field(dateTimeElement).schema().getType must be equalTo Type.STRING
-      node2field(dateElement).schema().getType must be equalTo Type.STRING
-      node2field(timeElement).schema().getType must be equalTo Type.STRING
-      node2field(base64BinaryElement).schema().getType must be equalTo Type.STRING
-      node2field(anyTypeElement).schema().getType must be equalTo Type.BYTES
+      element2field(intElement).schema().getType must be equalTo Type.INT
+      element2field(doubleElement).schema().getType must be equalTo Type.DOUBLE
+      element2field(stringElement).schema().getType must be equalTo Type.STRING
+      element2field(booleanElement).schema().getType must be equalTo Type.BOOLEAN
+      element2field(dateTimeElement).schema().getType must be equalTo Type.STRING
+      element2field(dateElement).schema().getType must be equalTo Type.STRING
+      element2field(timeElement).schema().getType must be equalTo Type.STRING
+      element2field(base64BinaryElement).schema().getType must be equalTo Type.STRING
+      element2field(anyTypeElement).schema().getType must be equalTo Type.BYTES
     }
 
     "convert XML complex types to Avro strings" in {
       val element1 = <element name="element1" type="Foo"/>
       val element2 = <element name="element2" type="ens:Bar"/>
 
-      node2field(element1).schema().getType must be equalTo Type.STRING
-      node2field(element2).schema().getType must be equalTo Type.STRING
+      element2field(element1).schema().getType must be equalTo Type.STRING
+      element2field(element2).schema().getType must be equalTo Type.STRING
     }
 
   }

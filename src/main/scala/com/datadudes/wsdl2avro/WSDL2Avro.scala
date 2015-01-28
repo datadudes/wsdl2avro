@@ -1,5 +1,7 @@
 package com.datadudes.wsdl2avro
 
+import java.io.File
+
 import scala.xml.{Elem, XML, Node}
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Type
@@ -36,6 +38,21 @@ object WSDL2Avro {
 
   private def filterNonComplexEmptyTypes = filterNodes(complexNonEmptyTypes) _
 
+  private def name(node: Node): String = (node \ "@name").toString()
+
+  private def parent(child: Node): String = ((child \\ "extension").head \ "@base").toString().split(":")(1)
+
+  private def sequenceFrom(node: Node): Seq[Node] =
+    if((node \\ "sequence").size > 0)
+      (node \\ "sequence").head.child
+    else if ((node \\ "all").size > 0)
+      (node \\ "all").head.child
+    else Nil
+
+  private def sequence2fields(sequence: Seq[Node]): Seq[Field] = {
+    sequence.map(element2field)
+  }
+
   def getDataTypeDefinitions(wsdl: Elem): Seq[Node] = {
     val schemas = wsdl \ "types" \ "schema"
     filterNonComplexEmptyTypes(schemas.flatMap(n => n.child))
@@ -52,22 +69,7 @@ object WSDL2Avro {
     record
   }
 
-  private def name(node: Node): String = (node \ "@name").toString()
-
-  private def sequenceFrom(node: Node): Seq[Node] =
-    if((node \\ "sequence").size > 0)
-      (node \\ "sequence").head.child
-    else if ((node \\ "all").size > 0)
-      (node \\ "all").head.child
-    else Nil
-
-  private def parent(child: Node): String = ((child \\ "extension").head \ "@base").toString().split(":")(1)
-
-  private def sequence2fields(sequence: Seq[Node]): Seq[Field] = {
-    sequence.map(node2field)
-  }
-
-  def node2field(node: Node): Field = {
+  def element2field(node: Node): Field = {
     val nodeName = name(node)
     val typeAttr = (node \ "@type").toString()
     val xmlType = if(typeAttr contains ":") typeAttr.split(":")(1) else typeAttr
@@ -87,9 +89,12 @@ object WSDL2Avro {
     baseTypeSchemas ++ childTypeSchemas
   }
 
-  def convert(path: String): Map[String, Schema] = {
-    val xml = XML.loadFile(path)
-    val types = getDataTypeDefinitions(xml)
+  def convert(path: String): Map[String, Schema] = convert(XML.loadFile(path))
+
+  def convert(wsdlFile: File): Map[String, Schema] = convert(XML.loadFile(wsdlFile))
+
+  def convert(wsdl: Elem): Map[String, Schema] = {
+    val types = getDataTypeDefinitions(wsdl)
     createSchemasFromXMLTypes(types)
   }
 

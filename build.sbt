@@ -1,6 +1,8 @@
-name := "salesforce-dwh"
+name := "wsdl2avro"
 
-version := "0.1.0"
+organization := "com.datadudes"
+
+version := "0.1-SNAPSHOT"
 
 scalaVersion := "2.11.4"
 

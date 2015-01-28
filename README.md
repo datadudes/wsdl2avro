@@ -10,7 +10,7 @@ This library is very much alpha quality for now.
 
 Features:
 
-- Provide a path to a WSDL document, or a File object, and get a `Map` with type names and Avro `Schema`s in return.
+- Provide a path to a WSDL document, or a File object, and get a `Map` with type names and Avro `Schema` objects in return.
 - Converts XML primitives to Avro primitives
 - Takes care of inheritance (which Avro doesn't support) by keeping track of base types and combining the fields of 
 base types with those of inherited types.
@@ -59,13 +59,13 @@ that points to your WSDL.
 
 You can call some of the steps in the conversion process manually:
 
-**Get the type definitions from the WSDL** _returns a sequence of `Node`s_
+**Get the type definitions from the WSDL** _(returns a sequence of `Node` objects)_
 
 ```scala
 WSDL2Avro.getDataTypeDefinitions(wsdl: Elem)
 ```
 
-**Convert a single type definition (from your WSDL) to an Avro Schema** _returns an Avro `Schema` object_
+**Convert a single type definition (from your WSDL) to an Avro Schema** _(returns an Avro `Schema` object)_
 
 ```scala
 WSDL2Avro.xmlType2Schema(node: Node, parentNode: Option[Node] = None)
@@ -74,13 +74,13 @@ WSDL2Avro.xmlType2Schema(node: Node, parentNode: Option[Node] = None)
 If the Node is a `complexType` that inherits from another `complexType`, you can provide the parent as well. Because 
 Avro doesn't support inheritance, it will combine the fields of parent and child into one Record Schema.
 
-**Convert one `<element>` from a complexType to an Avro field** _returns an Avro `Field` object_
+**Convert one `<element>` from a complexType to an Avro field** _(returns an Avro `Field` object)_
 
 ```scala
 WSDL2Avro.element2field(node: Node)
 ```
 
-**Convert a list of type definitions to a list of Avro Schemas** _returns a `Seq` of Avro `Schema`s_
+**Convert a list of type definitions to a list of Avro Schemas** _(returns a `Seq` of Avro `Schema` objects)_
 
 This will automatically recognize inheritance and provide the proper parent `complexType` when converting the child.
 

@@ -22,10 +22,6 @@ object WSDL2Avro {
     "anyType" -> Type.BYTES
   )
 
-  type NodeFilter = Node => Boolean
-
-  def filterNodes(f: NodeFilter)(nodes: Seq[Node]): Seq[Node] = nodes.filter(f)
-
   private def removeNS(typeName: String): String = if(typeName contains ":") typeName.split(":")(1) else typeName
 
   implicit class RichNode(node: Node) {
@@ -34,7 +30,10 @@ object WSDL2Avro {
       ((node \\ "sequence" \\ "element").size > 0 || (node \\ "all" \\ "element").size > 0)
     def isTypedAndNonEmpty = isTypedXml && isNonEmptyType
     def nameAttr: String = (node \ "@name").toString()
+    def typeAttr: String = (node \ "@type").toString()
     def baseNodeName: String = removeNS(((node \\ "extension").head \ "@base").toString())
+    def isNullable: Boolean = (node \ "@nillable").size > 0 && (node \ "@nillable").toString == "true"
+    def isOptional: Boolean = (node \ "@minOccurs").size > 0 && (node \ "@minOccurs").toString().toInt == 0
   }
 
   private def sequenceFrom(node: Node): Seq[Node] =
@@ -44,10 +43,6 @@ object WSDL2Avro {
       (node \\ "all").head.child
     else Nil
 
-  private def sequence2fields(sequence: Seq[Node]): Seq[Field] = {
-    sequence.map(element2field)
-  }
-
   def getDataTypeDefinitions(wsdl: Elem): Seq[Node] = {
     val schemas = wsdl \ "types" \ "schema"
     schemas.flatMap(n => n.child).filter(_.isTypedAndNonEmpty)
@@ -55,8 +50,8 @@ object WSDL2Avro {
 
   def xmlType2Schema(node: Node, parentNode: Option[Node] = None): Schema = {
     val elements = sequenceFrom(node)
-    val nodeFields = sequence2fields(elements.filter(_.isTypedXml))
-    val parentNodeFields = parentNode.map(n => sequence2fields(sequenceFrom(n).filter(_.isTypedXml)))
+    val nodeFields = elements.filter(_.isTypedXml).map(element2field)
+    val parentNodeFields = parentNode.map(n => sequenceFrom(n).filter(_.isTypedXml).map(element2field))
     val allFields = nodeFields ++ parentNodeFields.getOrElse(Nil)
 
     val record = Schema.createRecord(node.nameAttr, null, null, false)
@@ -65,10 +60,13 @@ object WSDL2Avro {
   }
 
   def element2field(node: Node): Field = {
-    val typeAttr = (node \ "@type").toString()
-    val xmlType = removeNS(typeAttr)
+    val xmlType = removeNS(node.typeAttr)
     val avroType = primitives.getOrElse(xmlType, Type.STRING)
-    new Field(node.nameAttr, Schema.create(avroType), null, null)
+    val schema = if(node.isNullable || node.isOptional)
+        Schema.createUnion(List(Schema.create(Type.NULL), Schema.create(avroType)))
+      else
+        Schema.create(avroType)
+    new Field(node.nameAttr, schema, null, null)
   }
 
   def createSchemasFromXMLTypes(typeList: Seq[Node]): Map[String, Schema] = {

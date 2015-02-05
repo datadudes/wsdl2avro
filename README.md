@@ -1,4 +1,4 @@
-WSDL2Avro
+WSDL2Avro [![Build Status](https://travis-ci.org/datadudes/wsdl2avro.svg?branch=master)](https://travis-ci.org/datadudes/wsdl2avro)
 =========
 
 WSDL2Avro is a Scala library that lets you convert datatypes from a SOAP WSDL to Avro Schemas. It takes the XML types as 

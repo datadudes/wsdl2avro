@@ -26,22 +26,17 @@ object WSDL2Avro {
 
   def filterNodes(f: NodeFilter)(nodes: Seq[Node]): Seq[Node] = nodes.filter(f)
 
-  val realXML = (node: Node) => node.label != "#PCDATA" && node.label != "import" && node.label != "any"
+  private def removeNS(typeName: String): String = if(typeName contains ":") typeName.split(":")(1) else typeName
 
-  val nonEmptyTypes = (node: Node) => ((node \\ "sequence").size > 0 || (node \\ "all").size > 0) &&
-    ((node \\ "sequence" \\ "element").size > 0 || (node \\ "all" \\ "element").size > 0)
-
-  val complexNonEmptyTypes = (node: Node) => realXML(node) && nonEmptyTypes(node)
-
-  // Remove PCDATA and import stuff
-  private def filterNonXML = filterNodes(realXML) _
-
-  private def filterNonComplexEmptyTypes = filterNodes(complexNonEmptyTypes) _
-
-  private def name(node: Node): String = (node \ "@name").toString()
-
-  private def parent(child: Node): String = ((child \\ "extension").head \ "@base").toString().split(":")(1)
-
+  implicit class RichNode(node: Node) {
+    def isTypedXml: Boolean = node.label != "#PCDATA" && node.label != "import" && node.label != "any"
+    def isNonEmptyType: Boolean = ((node \\ "sequence").size > 0 || (node \\ "all").size > 0) &&
+      ((node \\ "sequence" \\ "element").size > 0 || (node \\ "all" \\ "element").size > 0)
+    def isTypedAndNonEmpty = isTypedXml && isNonEmptyType
+    def nameAttr: String = (node \ "@name").toString()
+    def baseNodeName: String = removeNS(((node \\ "extension").head \ "@base").toString())
+  }
+  
   private def sequenceFrom(node: Node): Seq[Node] =
     if((node \\ "sequence").size > 0)
       (node \\ "sequence").head.child
@@ -55,36 +50,33 @@ object WSDL2Avro {
 
   def getDataTypeDefinitions(wsdl: Elem): Seq[Node] = {
     val schemas = wsdl \ "types" \ "schema"
-    filterNonComplexEmptyTypes(schemas.flatMap(n => n.child))
+    schemas.flatMap(n => n.child).filter(_.isTypedAndNonEmpty)
   }
 
   def xmlType2Schema(node: Node, parentNode: Option[Node] = None): Schema = {
     val elements = sequenceFrom(node)
-    val record = Schema.createRecord(name(node), null, null, false)
-    val fields = parentNode match {
-      case Some(p) => sequence2fields(filterNonXML(sequenceFrom(p))) ++ sequence2fields(filterNonXML(elements))
-      case None => sequence2fields(filterNonXML(elements))
-    }
-    record.setFields(fields)
+    val nodeFields = sequence2fields(elements.filter(_.isTypedXml))
+    val parentNodeFields = parentNode.map(n => sequence2fields(sequenceFrom(n).filter(_.isTypedXml)))
+    val allFields = nodeFields ++ parentNodeFields.getOrElse(Nil)
+
+    val record = Schema.createRecord(node.nameAttr, null, null, false)
+    record.setFields(allFields)
     record
   }
 
   def element2field(node: Node): Field = {
-    val nodeName = name(node)
     val typeAttr = (node \ "@type").toString()
-    val xmlType = if(typeAttr contains ":") typeAttr.split(":")(1) else typeAttr
-    primitives.get(xmlType) match {
-      case Some(n) => new Field(nodeName, Schema.create(n), null, null)
-      case None => new Field(nodeName, Schema.create(Type.STRING), null, null) // Optionally point to the ComplexType instead? (only if "nesting" is required)
-    }
+    val xmlType = removeNS(typeAttr)
+    val avroType = primitives.getOrElse(xmlType, Type.STRING)
+    new Field(node.nameAttr, Schema.create(avroType), null, null)
   }
 
   def createSchemasFromXMLTypes(typeList: Seq[Node]): Map[String, Schema] = {
     val (baseTypes, childTypes) = typeList.partition(n => (n \\ "extension").size == 0)
-    val baseTypeMap = baseTypes.map(n => name(n) -> n).toMap
-    val baseTypeSchemas = baseTypes.map(n => name(n) -> xmlType2Schema(n)).toMap
+    val baseTypeMap = baseTypes.map(n => n.nameAttr -> n).toMap
+    val baseTypeSchemas = baseTypes.map(n => n.nameAttr -> xmlType2Schema(n)).toMap
     val childTypeSchemas = childTypes.map { n =>
-      name(n) -> xmlType2Schema(n, baseTypeMap.get(parent(n)))
+      n.nameAttr -> xmlType2Schema(n, baseTypeMap.get(n.baseNodeName))
     }.toMap
     baseTypeSchemas ++ childTypeSchemas
   }

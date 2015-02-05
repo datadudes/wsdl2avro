@@ -36,6 +36,8 @@ or in your maven dependencies like this:
 
 You can run tests with `sbt test`.
 
+Currently, wsdl2avro is being cross-built for Scala 2.10.4 and 2.11.4
+
 ## Usage
 
 Using this library is really easy:

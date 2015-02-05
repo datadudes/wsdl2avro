@@ -36,7 +36,7 @@ object WSDL2Avro {
     def nameAttr: String = (node \ "@name").toString()
     def baseNodeName: String = removeNS(((node \\ "extension").head \ "@base").toString())
   }
-  
+
   private def sequenceFrom(node: Node): Seq[Node] =
     if((node \\ "sequence").size > 0)
       (node \\ "sequence").head.child

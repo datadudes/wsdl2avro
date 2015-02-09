@@ -56,9 +56,6 @@ You can also pretty-print the Avro Schema, which is useful for writing it to a f
 schemas.toString(true)
 ```
 
-`WSDL2Avro.convert()` is overloaded to take an xml `Elem` representation of your WSDL or a `java.io.File` object 
-that points to your WSDL.
-
 You can call some of the steps in the conversion process manually:
 
 **Get the type definitions from the WSDL** _(returns a sequence of `Node` objects)_

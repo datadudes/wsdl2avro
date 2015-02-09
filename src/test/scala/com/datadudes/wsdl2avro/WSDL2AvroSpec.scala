@@ -21,6 +21,17 @@ class WSDL2AvroSpec extends SpecificationWithJUnit with AllExpectations {
       getDataTypeDefinitions(xml).map(node => (node \ "@name").toString()) must not contain "EmptyType"
     }
 
+    "exclude fields based on the supplied predicate" in {
+      val url = getClass.getResource("/example.wsdl").toURI.toURL
+      val xml = XML.load(url)
+      val types = getDataTypeDefinitions(xml)
+      val predicate = (node: BasicNode) => node.name.contains("exchange")
+      val schema = xmlType2Schema(types(0), None, predicate)
+
+      schema.getFields.size() must be equalTo 1
+      schema.getFields.toList.map(_.name()) must not contain "exchange"
+    }
+
     "combine parent and child fields in case of inheritance" in {
       val parent = <complexType name="TradePrice">
                     <sequence>

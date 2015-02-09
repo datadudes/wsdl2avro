@@ -25,8 +25,6 @@ object WSDL2Avro {
     "anyType" -> Type.BYTES
   )
 
-  private def removeNS(typeName: String): String = if(typeName contains ":") typeName.split(":")(1) else typeName
-
   implicit class RichNode(node: Node) {
     def isTypedXml: Boolean = node.label != "#PCDATA" && node.label != "import" && node.label != "any"
     def isNonEmptyType: Boolean = ((node \\ "sequence").size > 0 || (node \\ "all").size > 0) &&
@@ -38,6 +36,10 @@ object WSDL2Avro {
     def isNullable: Boolean = (node \ "@nillable").size > 0 && (node \ "@nillable").toString == "true"
     def isOptional: Boolean = (node \ "@minOccurs").size > 0 && (node \ "@minOccurs").toString().toInt == 0
   }
+
+  case class BasicNode(name: String, xmlType: String)
+
+  private def removeNS(typeName: String): String = if(typeName contains ":") typeName.split(":")(1) else typeName
 
   private def sequenceFrom(node: Node): Seq[Node] =
     if((node \\ "sequence").size > 0)
@@ -51,10 +53,17 @@ object WSDL2Avro {
     schemas.flatMap(n => n.child).filter(_.isTypedAndNonEmpty)
   }
 
-  def xmlType2Schema(node: Node, parentNode: Option[Node] = None): Schema = {
+  def xmlType2Schema(node: Node, parentNode: Option[Node] = None,
+                     exclude: BasicNode => Boolean = _ => false): Schema = {
     val elements = sequenceFrom(node)
-    val nodeFields = elements.filter(_.isTypedXml).map(element2field)
-    val parentNodeFields = parentNode.map(n => sequenceFrom(n).filter(_.isTypedXml).map(element2field))
+    val nodeFields = elements
+      .filter(_.isTypedXml)
+      .filterNot(node => exclude(BasicNode(node.nameAttr, node.typeAttr)))
+      .map(element2field)
+    val parentNodeFields = parentNode.map(n => sequenceFrom(n)
+      .filter(_.isTypedXml)
+      .filterNot(node => exclude(BasicNode(node.nameAttr, node.typeAttr)))
+      .map(element2field))
     val allFields = nodeFields ++ parentNodeFields.getOrElse(Nil)
 
     val record = Schema.createRecord(node.nameAttr, null, null, false)
@@ -77,23 +86,20 @@ object WSDL2Avro {
     new Field(node.nameAttr, schema, null, default)
   }
 
-  def createSchemasFromXMLTypes(typeList: Seq[Node]): Map[String, Schema] = {
+  def createSchemasFromXMLTypes(typeList: Seq[Node],
+                                exclude: BasicNode => Boolean = _ => false): Map[String, Schema] = {
     val (baseTypes, childTypes) = typeList.partition(n => (n \\ "extension").size == 0)
     val baseTypeMap = baseTypes.map(n => n.nameAttr -> n).toMap
-    val baseTypeSchemas = baseTypes.map(n => n.nameAttr -> xmlType2Schema(n)).toMap
+    val baseTypeSchemas = baseTypes.map(n => n.nameAttr -> xmlType2Schema(n, None, exclude)).toMap
     val childTypeSchemas = childTypes.map { n =>
-      n.nameAttr -> xmlType2Schema(n, baseTypeMap.get(n.baseNodeName))
+      n.nameAttr -> xmlType2Schema(n, baseTypeMap.get(n.baseNodeName), exclude)
     }.toMap
     baseTypeSchemas ++ childTypeSchemas
   }
 
-  def convert(path: String): Map[String, Schema] = convert(XML.loadFile(path))
-
-  def convert(wsdlFile: File): Map[String, Schema] = convert(XML.loadFile(wsdlFile))
-
-  def convert(wsdl: Elem): Map[String, Schema] = {
-    val types = getDataTypeDefinitions(wsdl)
-    createSchemasFromXMLTypes(types)
+  def convert(path: String, exclude: BasicNode => Boolean = _ => false): Map[String, Schema] = {
+    val types = getDataTypeDefinitions(XML.loadFile(path))
+    createSchemasFromXMLTypes(types, exclude)
   }
 
 }

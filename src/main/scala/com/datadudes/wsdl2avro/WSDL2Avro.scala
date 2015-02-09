@@ -2,6 +2,9 @@ package com.datadudes.wsdl2avro
 
 import java.io.File
 
+import org.codehaus.jackson.JsonNode
+import org.codehaus.jackson.node.NullNode
+
 import scala.xml.{Elem, XML, Node}
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Type
@@ -62,11 +65,16 @@ object WSDL2Avro {
   def element2field(node: Node): Field = {
     val xmlType = removeNS(node.typeAttr)
     val avroType = primitives.getOrElse(xmlType, Type.STRING)
-    val schema = if(node.isNullable || node.isOptional)
-        Schema.createUnion(List(Schema.create(Type.NULL), Schema.create(avroType)))
-      else
-        Schema.create(avroType)
-    new Field(node.nameAttr, schema, null, null)
+
+    val (schema, default) = if (node.isNullable) {
+      (Schema.createUnion(List(Schema.create(avroType), Schema.create(Type.NULL))), null)
+    } else if (node.isOptional) {
+      (Schema.createUnion(List(Schema.create(Type.NULL), Schema.create(avroType))), NullNode.getInstance())
+    } else {
+      (Schema.create(avroType), null)
+    }
+
+    new Field(node.nameAttr, schema, null, default)
   }
 
   def createSchemasFromXMLTypes(typeList: Seq[Node]): Map[String, Schema] = {

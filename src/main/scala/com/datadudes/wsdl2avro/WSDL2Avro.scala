@@ -1,8 +1,5 @@
 package com.datadudes.wsdl2avro
 
-import java.io.File
-
-import org.codehaus.jackson.JsonNode
 import org.codehaus.jackson.node.NullNode
 
 import scala.xml.{Elem, XML, Node}
@@ -64,7 +61,7 @@ object WSDL2Avro {
       .filter(_.isTypedXml)
       .filterNot(node => exclude(BasicNode(node.nameAttr, node.typeAttr)))
       .map(element2field))
-    val allFields = nodeFields ++ parentNodeFields.getOrElse(Nil)
+    val allFields = parentNodeFields.getOrElse(Nil) ++ nodeFields
 
     val record = Schema.createRecord(node.nameAttr, null, null, false)
     record.setFields(allFields)
@@ -75,10 +72,10 @@ object WSDL2Avro {
     val xmlType = removeNS(node.typeAttr)
     val avroType = primitives.getOrElse(xmlType, Type.STRING)
 
-    val (schema, default) = if (node.isNullable) {
-      (Schema.createUnion(List(Schema.create(avroType), Schema.create(Type.NULL))), null)
-    } else if (node.isOptional) {
+    val (schema, default) = if (node.isOptional) {
       (Schema.createUnion(List(Schema.create(Type.NULL), Schema.create(avroType))), NullNode.getInstance())
+    } else if (node.isNullable) {
+      (Schema.createUnion(List(Schema.create(avroType), Schema.create(Type.NULL))), null)
     } else {
       (Schema.create(avroType), null)
     }

@@ -19,7 +19,7 @@ object WSDL2Avro {
     "date" -> Type.STRING,
     "time" -> Type.STRING,
     "base64Binary" -> Type.STRING,
-    "anyType" -> Type.BYTES
+    "anyType" -> Type.STRING
   )
 
   implicit class RichNode(node: Node) {

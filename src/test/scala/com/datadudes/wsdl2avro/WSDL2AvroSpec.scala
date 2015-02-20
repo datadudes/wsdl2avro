@@ -86,7 +86,7 @@ class WSDL2AvroSpec extends SpecificationWithJUnit with AllExpectations {
       element2field(dateElement).schema().getType must be equalTo Type.STRING
       element2field(timeElement).schema().getType must be equalTo Type.STRING
       element2field(base64BinaryElement).schema().getType must be equalTo Type.STRING
-      element2field(anyTypeElement).schema().getType must be equalTo Type.BYTES
+      element2field(anyTypeElement).schema().getType must be equalTo Type.STRING
     }
 
     "convert XML complex types to Avro strings" in {

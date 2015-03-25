@@ -1,6 +1,6 @@
 name := "wsdl2avro"
 
-organization := "com.datadudes"
+organization := "co.datadudes"
 
 version := "0.2-SNAPSHOT"
 
@@ -13,7 +13,7 @@ libraryDependencies := {
     // if scala 2.11+ is used, add dependency on scala-xml module
     case Some((2, scalaMajor)) if scalaMajor >= 11 =>
       libraryDependencies.value ++ Seq(
-        "org.scala-lang.modules"    %% "scala-xml" % "1.0.2",
+        "org.scala-lang.modules"    %% "scala-xml"      % "1.0.2",
         "org.apache.avro"           % "avro"            % "1.7.5",
         "org.specs2"                %% "specs2-junit"   % "2.4.15"    % "test")
     case _ =>

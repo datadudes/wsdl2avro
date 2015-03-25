@@ -58,4 +58,6 @@ libraryDependencies := {
   }
 }
 
+ReleaseKeys.publishArtifactsAction := PgpKeys.publishSigned.value
+
 releaseSettings

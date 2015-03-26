@@ -1,4 +1,4 @@
-package com.datadudes.wsdl2avro
+package co.datadudes.wsdl2avro
 
 import org.specs2.mutable.SpecificationWithJUnit
 import org.specs2.specification.AllExpectations

@@ -1,4 +1,4 @@
-package com.datadudes.wsdl2avro
+package co.datadudes.wsdl2avro
 
 import org.codehaus.jackson.node.NullNode
 

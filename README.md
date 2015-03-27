@@ -17,34 +17,52 @@ base types with those of inherited types.
 
 ## Installation
 
-No official build has currently been published yet, so for now, just publish this library to your local ivy/maven 
-repository using `sbt publish-local` or `sbt publish-m2`, and then include it in your sbt dependencies like this:
+_WSDL2Avro_ is published on Maven Central, so it's easy to include it in your project:
+
+#### SBT
 
 ```scala
-libraryDependencies += "com.datadudes" %% "wsdl2avro" % "0.1-SNAPSHOT"
+libraryDependencies += "co.datadudes" %% "wsdl2avro" % "0.2.1"
+```
+
+#### Maven
+
+```scala
+<dependency>
+  <groupId>co.datadudes</groupId>
+  <artifactId>wsdl2avro_2.10</artifactId>
+  <version>0.2.1</version>
+</dependency>
+```
+
+Currently, wsdl2avro is being cross-built for Scala 2.10.4 and 2.11.4, so use the appropriate suffex in Maven.
+
+If you want to be on the bleeding edge, just clone this repo and publish the library to your local ivy/maven repository 
+using `sbt publish-local` or `sbt publish-m2`, and then include it in your sbt dependencies like this:
+
+```scala
+libraryDependencies += "co.datadudes" %% "wsdl2avro" % "0.3-SNAPSHOT"
 ```
 
 or in your maven dependencies like this:
 
 ```xml
 <dependency>
-  <groupId>com.datadudes</groupId>
-  <artifactId>wsdl2avro</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <groupId>co.datadudes</groupId>
+  <artifactId>wsdl2avro_2.10</artifactId>
+  <version>0.3-SNAPSHOT</version>
 </dependency>
 ```
 
 You can run tests with `sbt test`.
-
-Currently, wsdl2avro is being cross-built for Scala 2.10.4 and 2.11.4
 
 ## Usage
 
 Using this library is really easy:
 
 ```scala
-scala> import com.datadudes.wsdl2avro.WSDL2Avro._
-import com.datadudes.wsdl2avro.WSDL2Avro._
+scala> import co.datadudes.wsdl2avro.WSDL2Avro._
+import co.datadudes.wsdl2avro.WSDL2Avro._
 
 scala> val schemas = convert("/path/to/some.wsdl")
 schemas: Map[String,org.apache.avro.Schema] = Map(ListViewRecord -> {"type":"record","name":"ListViewRecord","fields":[{"name":"columns","type":"string"}]}, Scontrol -> {"type":"record","name":"Scontrol","fields":[{"name":"fieldsToNull","type":"string"},{"name":"Id","type":"string"},{"name":"Binary","type":"string"},{"name":"BodyLength","type":"int"},{"name":"ContentSource","type":"string"},{"name":"CreatedBy","type":"string"},{"name":"CreatedById","type":"string"},{"name":"CreatedDate","type":"string"},{"name":"Description","type":"string"},{"name":"DeveloperName","type":"string"},{"name":"EncodingKey","type":"string"},{"name":"Filename","type":"string"},{"name":"HtmlWrapper","type":"string"},{"name":"LastModifiedBy","type":"string"},{"name":"LastModifiedById","type":"string"},{"name...
@@ -93,7 +111,7 @@ This library was created as part of an effort to build a tool that allows ingest
 SOAP API, and putting it into Hadoop/HDFS in Avro serialized format. In order to convert the XML from the Salesforce API 
 to Avro, we need to have proper Avro Schemas for all types of objects we want to store. This is how _wsdl2avro_ was born.
 
-We are planning to release this Salesforce->Hadoop tool when it's done!
+The Salesforce->Hadoop tool [can be found here](https://github.com/datadudes/salesforce2hadoop)
 
 #### Type conversion
 

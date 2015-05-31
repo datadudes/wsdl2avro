@@ -120,3 +120,15 @@ where no direct mapping exists, a suitable alternative was chosen. Complex types
 type, have `string` as type in the corresponding Avro Schema. This is mainly because for our specific use case, we want 
 to store data we consume from a SOAP API in a flat (non-nested) manner, and refer to related objects by id. If there's 
 enough demand, we will also add support for referencing other record types in the resulting Avro.
+
+## Contributing
+
+You're more than welcome to create issues for any bugs you find and ideas you have. Contributions in the form of pull 
+requests are also very much appreciated!
+
+## Authors
+
+Athena was created with passion by:
+
+- [Daan Debie](https://github.com/DandyDev) - [Website](http://dandydev.net/)
+- [Marcel Krcah](https://github.com/mkrcah) - [Website](http://marcelkrcah.net/)

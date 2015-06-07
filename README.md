@@ -6,7 +6,7 @@ defined in the `<types>` section of a WSDL document and converts them into Avro 
 programmatically or saved to disk. This library is particulary useful when you want to consume a SOAP service, and store 
 the data somewhere (e.g. in a Hadoop cluster) serialized in Avro format.
 
-This library is very much alpha quality for now.
+This library has been extensively used in production.
 
 Features:
 
